@@ -83,6 +83,16 @@
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
 
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(window.innerWidth < bp);
+  useEffect(() => {
+    const fn = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, [bp]);
+  return m;
+}
+
 // ─── Theme tokens ─────────────────────────────────────────────────────────────
 const T = {
   primary: '#1E3A5F',
@@ -101,7 +111,7 @@ const T = {
 // ─── Shared atoms ─────────────────────────────────────────────────────────────
 
 const Container = ({ children, style }) => (
-  <div style={{ maxWidth: 1240, margin: '0 auto', padding: '0 32px', ...style }}>{children}</div>
+  <div style={{ maxWidth: 1240, margin: '0 auto', padding: '0 clamp(16px, 4vw, 32px)', ...style }}>{children}</div>
 );
 
 const Eyebrow = ({ children, color = T.sky, center = false }) => (
@@ -390,6 +400,7 @@ const HeroVisual = () => {
 
 const Hero = ({ headline, subhead, cta }) => {
   const [scrolled, setScrolled] = useState(false);
+  const isMobile = useIsMobile();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll);
@@ -402,7 +413,7 @@ const Hero = ({ headline, subhead, cta }) => {
       minHeight: '100vh',
       color: T.text,
       overflow: 'hidden',
-      paddingTop: 140, paddingBottom: 120,
+      paddingTop: isMobile ? 100 : 140, paddingBottom: isMobile ? 72 : 120,
       display: 'flex', alignItems: 'center',
       background: T.primary
     }}>
@@ -457,15 +468,16 @@ const Hero = ({ headline, subhead, cta }) => {
             }}>参</div>
             <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: '0.02em', color: T.text }}>AI参謀</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
-            <a href="#problem" style={navLinkStyle}>課題</a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 0 : 36 }}>
+            {!isMobile && <><a href="#problem" style={navLinkStyle}>課題</a>
             <a href="#solution" style={navLinkStyle}>領域</a>
             <a href="#subsidy" style={navLinkStyle}>助成金</a>
-            <a href="#case" style={navLinkStyle}>事例</a>
+            <a href="#case" style={navLinkStyle}>事例</a></>}
             <a href="#cta" style={{
-              padding: '11px 22px',
+              padding: isMobile ? '9px 16px' : '11px 22px',
+              marginLeft: isMobile ? 0 : 0,
               background: T.accent, color: T.text,
-              fontWeight: 600, fontSize: 13, textDecoration: 'none',
+              fontWeight: 600, fontSize: isMobile ? 12 : 13, textDecoration: 'none',
               display: 'flex', alignItems: 'center', gap: 8,
               boxShadow: `0 6px 20px ${T.accent}40`,
               transition: 'all .2s'
@@ -475,7 +487,7 @@ const Hero = ({ headline, subhead, cta }) => {
       </nav>
 
       <Container style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 72, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.3fr 1fr', gap: isMobile ? 48 : 72, alignItems: 'center' }}>
           <div>
             <Eyebrow color={T.sky}>BACKOFFICE × AI AUTOMATION</Eyebrow>
             <h1 style={{
@@ -527,7 +539,7 @@ const Hero = ({ headline, subhead, cta }) => {
             </div>
 
             <div style={{
-              marginTop: 64, display: 'flex', gap: 56,
+              marginTop: isMobile ? 40 : 64, display: 'flex', gap: isMobile ? 28 : 56,
               paddingTop: 36,
               borderTop: `1px solid ${T.border}`
             }}>
@@ -553,7 +565,7 @@ const Hero = ({ headline, subhead, cta }) => {
             </div>
           </div>
 
-          <HeroVisual />
+          {!isMobile && <HeroVisual />}
         </div>
       </Container>
     </section>
@@ -564,6 +576,7 @@ const Hero = ({ headline, subhead, cta }) => {
 
 const Problem = () => {
   const [open, setOpen] = useState(0);
+  const isMobile = useIsMobile();
   const items = [
     {
       stat: '600万円', unit: '/年',
@@ -588,7 +601,7 @@ const Problem = () => {
   return (
     <section id="problem" data-screen-label="02 Problem" style={{
       background: T.bgDeep, color: T.text,
-      padding: '140px 0', position: 'relative'
+      padding: isMobile ? '80px 0' : '140px 0', position: 'relative'
     }}>
       <Container>
         <SectionHead
@@ -607,13 +620,13 @@ const Problem = () => {
                   background: isOpen
                     ? `linear-gradient(135deg, rgba(37,99,235,0.08), rgba(56,189,248,0.04))`
                     : T.bgSlate,
-                  padding: '32px 40px',
+                  padding: isMobile ? '20px 16px' : '32px 40px',
                   cursor: 'pointer',
                   border: `1px solid ${isOpen ? T.sky + '40' : T.border}`,
                   transition: 'all .25s ease',
                   boxShadow: isOpen ? `0 12px 40px rgba(37,99,235,0.15)` : 'none'
                 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '120px 240px 1fr 40px', gap: 32, alignItems: 'center' }}>
+                <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: 10 } : { display: 'grid', gridTemplateColumns: '120px 240px 1fr 40px', gap: 32, alignItems: 'center' }}>
                   <div style={{
                     fontFamily: '"Inter", sans-serif',
                     fontSize: 12, fontWeight: 600,
@@ -656,7 +669,7 @@ const Problem = () => {
                   <div style={{
                     marginTop: 24, paddingTop: 24,
                     borderTop: `1px dashed ${T.border}`,
-                    paddingLeft: 152,
+                    paddingLeft: isMobile ? 0 : 152,
                     fontSize: 14, lineHeight: 1.85, color: T.textMuted,
                     animation: 'fadeIn .3s ease'
                   }}>
@@ -676,6 +689,7 @@ const Problem = () => {
 
 const Solution = () => {
   const [active, setActive] = useState(0);
+  const isMobile = useIsMobile();
   const areas = [
     { num: '01', area: '経理・財務', tag: 'Accounting & Finance',
       tasks: ['請求書発行・送付', '経費精算チェック', '月次決算データ集計', '入金消込', '振込依頼書作成'],
@@ -697,7 +711,7 @@ const Solution = () => {
   return (
     <section id="solution" data-screen-label="03 Solution" style={{
       background: T.bgSlate, color: T.text,
-      padding: '140px 0', position: 'relative', overflow: 'hidden'
+      padding: isMobile ? '80px 0' : '140px 0', position: 'relative', overflow: 'hidden'
     }}>
       <div style={{
         position: 'absolute', right: -100, top: 60,
@@ -714,7 +728,7 @@ const Solution = () => {
           lead={<>業務をAIに「翻訳」して、再現性のあるワークフローに組み替えます。<br/>人が判断すべき仕事だけが、人の手元に残ります。</>}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 0 : 48 }}>
           {/* tabs */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {areas.map((a, i) => (
@@ -831,10 +845,12 @@ const Solution = () => {
 
 // ─── 4. SUBSIDY ──────────────────────────────────────────────────────────────
 
-const Subsidy = () => (
+const Subsidy = () => {
+  const isMobile = useIsMobile();
+  return (
   <section id="subsidy" data-screen-label="04 Subsidy" style={{
     background: T.bgDeep, color: T.text,
-    padding: '140px 0', position: 'relative'
+    padding: isMobile ? '80px 0' : '140px 0', position: 'relative'
   }}>
     <Container>
       <SectionHead
@@ -843,7 +859,7 @@ const Subsidy = () => (
         lead={<>人材開発支援助成金（事業展開等リスキリング支援コース）を活用。<br/>社労士が申請から受給まで完全代行するため、お客様の作業はゼロです。</>}
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 64, alignItems: 'center', maxWidth: 1100, margin: '0 auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.1fr', gap: isMobile ? 40 : 64, alignItems: 'center', maxWidth: 1100, margin: '0 auto' }}>
         <div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {[
@@ -880,7 +896,7 @@ const Subsidy = () => (
           border: '1px solid rgba(56,189,248,0.18)',
           backdropFilter: 'blur(20px) saturate(160%)',
           WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-          padding: 44,
+          padding: isMobile ? 24 : 44,
           boxShadow: '0 30px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)'
         }}>
           <div style={{
@@ -939,12 +955,14 @@ const Subsidy = () => (
       </div>
     </Container>
   </section>
-);
+  );
+};
 
 // ─── 5. PHASES ───────────────────────────────────────────────────────────────
 
 const Phases = () => {
   const [active, setActive] = useState(0);
+  const isMobile = useIsMobile();
   const phases = [
     {
       num: '01', label: 'PHASE 01',
@@ -969,7 +987,7 @@ const Phases = () => {
   return (
     <section data-screen-label="05 Phases" style={{
       background: T.bgSlate, color: T.text,
-      padding: '140px 0', position: 'relative'
+      padding: isMobile ? '80px 0' : '140px 0', position: 'relative'
     }}>
       <Container>
         <SectionHead
@@ -980,7 +998,7 @@ const Phases = () => {
 
         <div style={{ position: 'relative' }}>
           {/* progress line */}
-          <div style={{
+          {!isMobile && <div style={{
             position: 'absolute', top: 28, left: '14%', right: '14%',
             height: 2, background: T.border
           }}>
@@ -991,9 +1009,9 @@ const Phases = () => {
               transition: 'width .4s ease',
               boxShadow: `0 0 12px ${T.sky}80`
             }}></div>
-          </div>
+          </div>}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, position: 'relative' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 24 : 32, position: 'relative' }}>
             {phases.map((p, i) => (
               <div key={i}
                 onMouseEnter={() => setActive(i)}
@@ -1077,10 +1095,12 @@ const Phases = () => {
 
 // ─── 6. CASE STUDY ───────────────────────────────────────────────────────────
 
-const CaseStudy = () => (
+const CaseStudy = () => {
+  const isMobile = useIsMobile();
+  return (
   <section id="case" data-screen-label="06 Case" style={{
     background: T.bgDeep, color: T.text,
-    padding: '140px 0', position: 'relative', overflow: 'hidden'
+    padding: isMobile ? '80px 0' : '140px 0', position: 'relative', overflow: 'hidden'
   }}>
     <div style={{
       position: 'absolute', left: -100, bottom: -100,
@@ -1110,15 +1130,16 @@ const CaseStudy = () => (
         </div>
 
         {/* metrics */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, marginBottom: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 24 : 0, marginBottom: 40 }}>
           {[
             { v: '50', u: '万円/月', l: '固定費削減', sub: '年換算 600万円' },
             { v: '180', u: 'h/月', l: '工数削減', sub: '主要業務トータル' },
             { v: '4', u: 'ヶ月', l: '黒字化期間', sub: '初期投資の回収' },
           ].map((m, i) => (
             <div key={i} style={{
-              padding: i === 0 ? '0 32px 0 0' : '0 32px',
-              borderRight: i < 2 ? `1px solid ${T.border}` : 'none'
+              padding: isMobile ? '0 0 24px' : (i === 0 ? '0 32px 0 0' : '0 32px'),
+              borderRight: !isMobile && i < 2 ? `1px solid ${T.border}` : 'none',
+              borderBottom: isMobile && i < 2 ? `1px solid ${T.border}` : 'none'
             }}>
               <div style={{
                 fontFamily: '"Inter", sans-serif',
@@ -1150,7 +1171,7 @@ const CaseStudy = () => (
           }}>
             BEFORE / AFTER
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 32, alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr auto 1fr', gap: isMobile ? 24 : 32, alignItems: 'center' }}>
             <div>
               <div style={{ fontSize: 12, color: T.textFaint, marginBottom: 12, letterSpacing: '0.1em' }}>導入前</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1177,19 +1198,22 @@ const CaseStudy = () => (
       </div>
     </Container>
   </section>
-);
+  );
+};
 
 // ─── 7. CTA ──────────────────────────────────────────────────────────────────
 
-const CTA = ({ cta }) => (
+const CTA = ({ cta }) => {
+  const isMobile = useIsMobile();
+  return (
   <section id="cta" data-screen-label="07 CTA" style={{
     background: T.bgSlate,
-    padding: '140px 0', position: 'relative'
+    padding: isMobile ? '80px 0' : '140px 0', position: 'relative'
   }}>
     <Container>
       <div style={{
         background: `linear-gradient(135deg, ${T.primary} 0%, ${T.bgDeep} 100%)`,
-        color: T.text, padding: '88px 80px',
+        color: T.text, padding: isMobile ? '48px 20px' : '88px 80px',
         position: 'relative', overflow: 'hidden',
         border: `1px solid ${T.sky}30`,
         boxShadow: `0 30px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)`
@@ -1230,7 +1254,7 @@ const CTA = ({ cta }) => (
           </p>
 
           <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16,
+            display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16,
             marginBottom: 48, paddingTop: 36,
             borderTop: `1px solid ${T.border}`,
             textAlign: 'left'
@@ -1279,7 +1303,8 @@ const CTA = ({ cta }) => (
       </div>
     </Container>
   </section>
-);
+  );
+};
 
 // ─── 8. FOOTER ───────────────────────────────────────────────────────────────
 
