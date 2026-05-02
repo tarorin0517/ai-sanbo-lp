@@ -1,0 +1,1359 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AI参謀 — バックオフィス業務AI自動化</title>
+<meta name="description" content="バックオフィスをAIで自動化。固定費を半分に。中小企業向けAI参謀が、経理・総務・人事・営業サポート・CS対応の定型業務を自動化します。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #F1F5F9;
+    background: #0F172A;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.6;
+  }
+  a { color: inherit; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 44px rgba(37,99,235,0.6) !important;
+  }
+  ::selection { background: #2563EB; color: #fff; }
+  html { scroll-behavior: smooth; }
+  nav a:hover { opacity: 1 !important; }
+
+  /* Tweaks panel styles */
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+  .twk-field{appearance:none;width:100%;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── Theme tokens ─────────────────────────────────────────────────────────────
+const T = {
+  primary: '#1E3A5F',
+  accent: '#2563EB',
+  sky: '#38BDF8',
+  bgDeep: '#0F172A',
+  bgSlate: '#1E293B',
+  text: '#FFFFFF',
+  textMuted: '#F1F5F9',
+  textDim: 'rgba(241,245,249,0.65)',
+  textFaint: 'rgba(241,245,249,0.4)',
+  border: 'rgba(148,163,184,0.15)',
+  borderStrong: 'rgba(148,163,184,0.25)',
+};
+
+// ─── Shared atoms ─────────────────────────────────────────────────────────────
+
+const Container = ({ children, style }) => (
+  <div style={{ maxWidth: 1240, margin: '0 auto', padding: '0 32px', ...style }}>{children}</div>
+);
+
+const Eyebrow = ({ children, color = T.sky, center = false }) => (
+  <div style={{
+    display: center ? 'flex' : 'inline-flex',
+    justifyContent: center ? 'center' : 'flex-start',
+    alignItems: 'center', gap: 12,
+    fontSize: 13, fontWeight: 600, letterSpacing: '0.18em',
+    color, textTransform: 'uppercase',
+    fontFamily: '"Inter", "Noto Sans JP", sans-serif'
+  }}>
+    <span style={{ width: 28, height: 1, background: color }}></span>
+    {children}
+    {center && <span style={{ width: 28, height: 1, background: color }}></span>}
+  </div>
+);
+
+const SectionHead = ({ eyebrow, title, lead }) => (
+  <div style={{ textAlign: 'center', marginBottom: 80, maxWidth: 820, margin: '0 auto 80px' }}>
+    <Eyebrow color={T.sky} center>{eyebrow}</Eyebrow>
+    <h2 style={{
+      fontSize: 'clamp(36px, 4vw, 56px)',
+      lineHeight: 1.25, fontWeight: 800,
+      color: T.text, margin: '24px 0 20px',
+      letterSpacing: '-0.01em'
+    }}>{title}</h2>
+    {lead && (
+      <p style={{
+        fontSize: 17, lineHeight: 1.85,
+        color: T.textDim, margin: 0,
+      }}>{lead}</p>
+    )}
+  </div>
+);
+
+// ─── Tweaks Panel ─────────────────────────────────────────────────────────────
+
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(clampToViewport) : null;
+    if (ro) { ro.observe(document.documentElement); return () => ro.disconnect(); }
+    window.addEventListener('resize', clampToViewport);
+    return () => window.removeEventListener('resize', clampToViewport);
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <div ref={dragRef} className="twk-panel" data-noncommentable=""
+         style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+      <div className="twk-hd" onMouseDown={onDragStart}>
+        <b>{title}</b>
+        <button className="twk-x" aria-label="Close tweaks"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={dismiss}>✕</button>
+      </div>
+      <div className="twk-body">{children}</div>
+    </div>
+  );
+}
+
+function TweakSection({ label }) {
+  return <div className="twk-sect">{label}</div>;
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <div className="twk-row">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+// ─── 1. HERO ─────────────────────────────────────────────────────────────────
+
+const HERO_IMG = 'https://images.unsplash.com/photo-1772103786041-40ecbf783851?w=1920&h=1080&fit=crop&q=80';
+
+const navLinkStyle = {
+  color: T.textMuted, textDecoration: 'none',
+  fontSize: 14, fontWeight: 500, opacity: 0.85, transition: 'opacity .2s'
+};
+
+const HeroVisual = () => {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 1500);
+    return () => clearInterval(id);
+  }, []);
+
+  const tasks = [
+    { label: '請求書発行・送付', status: 'done', time: '0.8s' },
+    { label: '経費精算チェック', status: 'done', time: '1.2s' },
+    { label: '勤怠データ集計', status: 'running', time: '—' },
+    { label: '受注メール返信ドラフト', status: 'queue', time: '—' },
+  ];
+
+  return (
+    <div style={{
+      position: 'relative',
+      transform: 'perspective(1600px) rotateY(-7deg) rotateX(3deg)',
+      transformStyle: 'preserve-3d'
+    }}>
+      <div style={{
+        position: 'absolute', inset: -40, zIndex: 0,
+        background: `radial-gradient(ellipse at center, ${T.accent}30, transparent 60%)`,
+        filter: 'blur(40px)'
+      }}></div>
+
+      <div style={{
+        position: 'relative', zIndex: 1,
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        padding: 28,
+        backdropFilter: 'blur(24px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+        boxShadow: '0 30px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 22,
+          paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.08)'
+        }}>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#FF5F57' }}></span>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#FEBC2E' }}></span>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#28C840' }}></span>
+          <span style={{
+            marginLeft: 'auto', fontSize: 11,
+            color: 'rgba(255,255,255,0.5)',
+            fontFamily: '"Inter", monospace', letterSpacing: '0.05em'
+          }}>
+            ai-sanbo.console / live
+          </span>
+        </div>
+
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: 16
+        }}>
+          <div style={{ fontSize: 11, color: T.sky, letterSpacing: '0.16em', fontWeight: 600 }}>
+            AUTOMATION QUEUE
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
+            ● LIVE
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {tasks.map((task, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 14,
+              padding: '14px 16px',
+              background: task.status === 'running'
+                ? `linear-gradient(90deg, ${T.accent}25, transparent)`
+                : 'rgba(255,255,255,0.03)',
+              border: task.status === 'running' ? `1px solid ${T.sky}30` : '1px solid rgba(255,255,255,0.05)',
+              borderLeft: `2px solid ${
+                task.status === 'done' ? '#3CD27F' :
+                task.status === 'running' ? T.sky :
+                'rgba(255,255,255,0.15)'
+              }`,
+            }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: task.status === 'done' ? '#3CD27F' :
+                  task.status === 'running' ? T.sky :
+                  'rgba(255,255,255,0.2)',
+                boxShadow: task.status !== 'queue' ? `0 0 10px currentColor` : 'none',
+                color: task.status === 'done' ? '#3CD27F' : T.sky,
+                animation: task.status === 'running' ? 'pulse 1s infinite' : 'none',
+                flexShrink: 0
+              }}></span>
+              <span style={{ fontSize: 14, color: T.text, flex: 1 }}>{task.label}</span>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
+                {task.status === 'done' ? `✓ ${task.time}` : task.status === 'running' ? '実行中…' : '待機中'}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          marginTop: 20, paddingTop: 18,
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16
+        }}>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', marginBottom: 4 }}>本日の処理</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: T.sky, fontFamily: '"Inter", sans-serif', letterSpacing: '-0.01em' }}>
+              142 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>tasks</span>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', marginBottom: 4 }}>削減時間</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: T.sky, fontFamily: '"Inter", sans-serif', letterSpacing: '-0.01em' }}>
+              6.4 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>hours</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{
+        position: 'absolute', top: -16, right: -16,
+        background: `linear-gradient(135deg, ${T.accent}, ${T.sky})`,
+        color: T.text,
+        padding: '10px 18px',
+        fontSize: 12, fontWeight: 700,
+        boxShadow: `0 12px 32px ${T.accent}50`,
+        transform: 'rotate(3deg)',
+        letterSpacing: '0.04em',
+        zIndex: 2
+      }}>
+        24/7 稼働中
+      </div>
+    </div>
+  );
+};
+
+const Hero = ({ headline, subhead, cta }) => {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <section data-screen-label="01 Hero" style={{
+      position: 'relative',
+      minHeight: '100vh',
+      color: T.text,
+      overflow: 'hidden',
+      paddingTop: 140, paddingBottom: 120,
+      display: 'flex', alignItems: 'center',
+      background: T.primary
+    }}>
+      {/* bg image */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `url(${HERO_IMG})`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        filter: 'saturate(0.85)'
+      }}></div>
+      {/* navy overlay */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: `linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(30,58,95,0.7) 50%, rgba(15,23,42,0.95) 100%)`
+      }}></div>
+      {/* mesh accents */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `radial-gradient(circle at 80% 20%, rgba(56,189,248,0.18) 0%, transparent 35%),
+                          radial-gradient(circle at 15% 85%, rgba(37,99,235,0.20) 0%, transparent 40%)`,
+        pointerEvents: 'none'
+      }}></div>
+      {/* grid */}
+      <div style={{
+        position: 'absolute', inset: 0, opacity: 0.06,
+        backgroundImage: `linear-gradient(${T.text} 1px, transparent 1px), linear-gradient(90deg, ${T.text} 1px, transparent 1px)`,
+        backgroundSize: '64px 64px',
+        maskImage: 'radial-gradient(ellipse at center, #000 0%, transparent 70%)',
+        WebkitMaskImage: 'radial-gradient(ellipse at center, #000 0%, transparent 70%)',
+        pointerEvents: 'none'
+      }}></div>
+
+      {/* nav */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        padding: '18px 32px',
+        background: scrolled ? 'rgba(15,23,42,0.72)' : 'rgba(15,23,42,0.2)',
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+        borderBottom: `1px solid ${scrolled ? T.border : 'transparent'}`,
+        transition: 'all .3s ease'
+      }}>
+        <Container style={{ padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 32, height: 32,
+              background: `linear-gradient(135deg, ${T.accent}, ${T.sky})`,
+              display: 'grid', placeItems: 'center',
+              fontWeight: 800, color: T.text, fontSize: 15,
+              fontFamily: '"Inter", sans-serif',
+              boxShadow: `0 0 20px ${T.accent}60`
+            }}>参</div>
+            <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: '0.02em', color: T.text }}>AI参謀</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
+            <a href="#problem" style={navLinkStyle}>課題</a>
+            <a href="#solution" style={navLinkStyle}>領域</a>
+            <a href="#subsidy" style={navLinkStyle}>助成金</a>
+            <a href="#case" style={navLinkStyle}>事例</a>
+            <a href="#cta" style={{
+              padding: '11px 22px',
+              background: T.accent, color: T.text,
+              fontWeight: 600, fontSize: 13, textDecoration: 'none',
+              display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: `0 6px 20px ${T.accent}40`,
+              transition: 'all .2s'
+            }}>無料診断 <span>→</span></a>
+          </div>
+        </Container>
+      </nav>
+
+      <Container style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 72, alignItems: 'center' }}>
+          <div>
+            <Eyebrow color={T.sky}>BACKOFFICE × AI AUTOMATION</Eyebrow>
+            <h1 style={{
+              fontSize: 'clamp(40px, 5.4vw, 70px)',
+              lineHeight: 1.18,
+              fontWeight: 800,
+              letterSpacing: '-0.015em',
+              margin: '32px 0 28px',
+              color: T.text
+            }}>
+              {headline.split('、').map((part, i, arr) => (
+                <span key={i}>
+                  {i === arr.length - 1 ? (
+                    <span><span style={{
+                      background: `linear-gradient(135deg, ${T.sky}, ${T.accent})`,
+                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}>{part.replace('。', '')}</span>。</span>
+                  ) : (
+                    <span>{part}、<br/></span>
+                  )}
+                </span>
+              ))}
+            </h1>
+            <p style={{
+              fontSize: 19, lineHeight: 1.8,
+              color: T.textMuted, opacity: 0.85,
+              margin: '0 0 44px',
+              maxWidth: 540
+            }}>
+              {subhead}
+            </p>
+            <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+              <a href="#cta" className="cta-btn" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 12,
+                background: T.accent, color: T.text,
+                padding: '20px 34px',
+                fontWeight: 700, fontSize: 16, textDecoration: 'none',
+                boxShadow: `0 12px 32px ${T.accent}50`,
+                transition: 'all .2s ease',
+                border: `1px solid ${T.sky}40`
+              }}>
+                {cta}
+              </a>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: T.textDim, fontSize: 13 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3CD27F', boxShadow: '0 0 10px #3CD27F' }}></span>
+                残り <strong style={{ color: T.text, fontWeight: 700 }}>3社</strong> /月
+              </div>
+            </div>
+
+            <div style={{
+              marginTop: 64, display: 'flex', gap: 56,
+              paddingTop: 36,
+              borderTop: `1px solid ${T.border}`
+            }}>
+              {[
+                { v: '50%', l: '固定費削減' },
+                { v: '75%', l: '助成金補助' },
+                { v: '60min', l: '無料診断' },
+              ].map(s => (
+                <div key={s.l}>
+                  <div style={{
+                    fontSize: 36, fontWeight: 800,
+                    background: `linear-gradient(135deg, ${T.sky}, ${T.accent})`,
+                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    fontFamily: '"Inter", sans-serif',
+                    letterSpacing: '-0.02em', lineHeight: 1
+                  }}>
+                    {s.v}
+                  </div>
+                  <div style={{ fontSize: 13, color: T.textDim, marginTop: 8, letterSpacing: '0.04em' }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <HeroVisual />
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+// ─── 2. PROBLEM ──────────────────────────────────────────────────────────────
+
+const Problem = () => {
+  const [open, setOpen] = useState(0);
+  const items = [
+    {
+      stat: '600万円', unit: '/年',
+      title: 'バックオフィス1名の固定費',
+      body: '社会保険・賞与・退職金まで含めた実質コスト。会社の利益を直接圧迫する、最も重い「人件費の固定化」。',
+      detail: '正社員1名（年収450万円）で算出。法定福利費・退職給付・賃料・備品まで含めると、表面年収の1.3〜1.4倍が実質コストです。'
+    },
+    {
+      stat: '100万円超', unit: '/採用',
+      title: '採用・定着の困難',
+      body: '求人広告、紹介手数料、教育コスト。やっと採用しても1年以内に離職するケースが続出している。',
+      detail: '中小企業の採用1名あたり平均コスト103.3万円。離職率は事務職で約14%。'
+    },
+    {
+      stat: '0%', unit: '効果',
+      title: 'ChatGPT導入しても業務は変わらなかった',
+      body: '「AI使ってみたけど、結局人がコピペしてる」。ツール導入だけでは業務フローは変わらない。',
+      detail: '汎用AIは「使い方」を設計しないと効果ゼロ。業務プロセスへの組み込みと、運用ルールの設計がセットで必要です。'
+    },
+  ];
+
+  return (
+    <section id="problem" data-screen-label="02 Problem" style={{
+      background: T.bgDeep, color: T.text,
+      padding: '140px 0', position: 'relative'
+    }}>
+      <Container>
+        <SectionHead
+          eyebrow="The Problem"
+          title={<>人を増やす経営は、<br/>もう、<span style={{ color: T.sky }}>限界</span>。</>}
+          lead={<>中小企業のバックオフィスは、いま3つの壁にぶつかっています。<br/>一つでも当てはまる企業様は、AI参謀の出番です。</>}
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 1100, margin: '0 auto' }}>
+          {items.map((item, i) => {
+            const isOpen = open === i;
+            return (
+              <div key={i}
+                onClick={() => setOpen(isOpen ? -1 : i)}
+                style={{
+                  background: isOpen
+                    ? `linear-gradient(135deg, rgba(37,99,235,0.08), rgba(56,189,248,0.04))`
+                    : T.bgSlate,
+                  padding: '32px 40px',
+                  cursor: 'pointer',
+                  border: `1px solid ${isOpen ? T.sky + '40' : T.border}`,
+                  transition: 'all .25s ease',
+                  boxShadow: isOpen ? `0 12px 40px rgba(37,99,235,0.15)` : 'none'
+                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '120px 240px 1fr 40px', gap: 32, alignItems: 'center' }}>
+                  <div style={{
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: 12, fontWeight: 600,
+                    color: isOpen ? T.sky : T.textFaint,
+                    letterSpacing: '0.16em'
+                  }}>
+                    PROBLEM 0{i+1}
+                  </div>
+                  <div style={{
+                    fontSize: 36, fontWeight: 800,
+                    color: isOpen ? T.sky : T.text,
+                    fontFamily: '"Inter", "Noto Sans JP", sans-serif',
+                    letterSpacing: '-0.02em', lineHeight: 1
+                  }}>
+                    {item.stat}
+                    <span style={{ fontSize: 15, fontWeight: 500, marginLeft: 4, color: T.textDim }}>
+                      {item.unit}
+                    </span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 19, fontWeight: 700, color: T.text, marginBottom: 6 }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontSize: 14, color: T.textDim, lineHeight: 1.7 }}>
+                      {item.body}
+                    </div>
+                  </div>
+                  <div style={{
+                    width: 36, height: 36,
+                    border: `1px solid ${isOpen ? T.sky : T.borderStrong}`,
+                    color: isOpen ? T.sky : T.textFaint,
+                    display: 'grid', placeItems: 'center',
+                    fontSize: 18, fontWeight: 300,
+                    transition: 'all .25s'
+                  }}>
+                    {isOpen ? '−' : '+'}
+                  </div>
+                </div>
+                {isOpen && (
+                  <div style={{
+                    marginTop: 24, paddingTop: 24,
+                    borderTop: `1px dashed ${T.border}`,
+                    paddingLeft: 152,
+                    fontSize: 14, lineHeight: 1.85, color: T.textMuted,
+                    animation: 'fadeIn .3s ease'
+                  }}>
+                    {item.detail}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+// ─── 3. SOLUTION ─────────────────────────────────────────────────────────────
+
+const Solution = () => {
+  const [active, setActive] = useState(0);
+  const areas = [
+    { num: '01', area: '経理・財務', tag: 'Accounting & Finance',
+      tasks: ['請求書発行・送付', '経費精算チェック', '月次決算データ集計', '入金消込', '振込依頼書作成'],
+      saving: '月 80h 削減' },
+    { num: '02', area: '総務・庶務', tag: 'General Affairs',
+      tasks: ['備品発注・在庫管理', '契約書管理・更新通知', '出張手配', '郵便物仕分け', '社内問い合わせ対応'],
+      saving: '月 50h 削減' },
+    { num: '03', area: '人事・労務', tag: 'HR & Labor',
+      tasks: ['勤怠データ集計', '入退社手続き準備', '給与計算前処理', '社保関連書類作成', '採用応募者管理'],
+      saving: '月 60h 削減' },
+    { num: '04', area: '営業サポート', tag: 'Sales Support',
+      tasks: ['見積書・提案書作成', 'CRMデータ入力', '商談議事録作成', '受注処理', 'リード情報整理'],
+      saving: '月 70h 削減' },
+    { num: '05', area: 'CS対応', tag: 'Customer Support',
+      tasks: ['問い合わせ一次対応', 'FAQ自動回答', 'クレーム情報整理', '顧客データ更新', 'アンケート集計'],
+      saving: '月 90h 削減' },
+  ];
+
+  return (
+    <section id="solution" data-screen-label="03 Solution" style={{
+      background: T.bgSlate, color: T.text,
+      padding: '140px 0', position: 'relative', overflow: 'hidden'
+    }}>
+      <div style={{
+        position: 'absolute', right: -100, top: 60,
+        fontSize: 480, fontWeight: 900,
+        color: 'rgba(56,189,248,0.03)',
+        fontFamily: '"Inter", sans-serif',
+        lineHeight: 1, pointerEvents: 'none', userSelect: 'none'
+      }}>05</div>
+
+      <Container style={{ position: 'relative' }}>
+        <SectionHead
+          eyebrow="Solution"
+          title={<>5領域すべての<br/><span style={{ color: T.sky }}>定型業務</span>を自動化。</>}
+          lead={<>業務をAIに「翻訳」して、再現性のあるワークフローに組み替えます。<br/>人が判断すべき仕事だけが、人の手元に残ります。</>}
+        />
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48 }}>
+          {/* tabs */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {areas.map((a, i) => (
+              <div key={i}
+                onMouseEnter={() => setActive(i)}
+                onClick={() => setActive(i)}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '60px 1fr auto',
+                  alignItems: 'center', gap: 20,
+                  padding: '28px 0',
+                  borderTop: i === 0 ? `1px solid ${T.border}` : 'none',
+                  borderBottom: `1px solid ${T.border}`,
+                  cursor: 'pointer', transition: 'all .2s'
+                }}>
+                <div style={{
+                  fontFamily: '"Inter", sans-serif',
+                  fontSize: 14, fontWeight: 700,
+                  color: active === i ? T.sky : T.textFaint,
+                  letterSpacing: '0.05em'
+                }}>{a.num}</div>
+                <div>
+                  <div style={{
+                    fontSize: 26, fontWeight: 700,
+                    color: active === i ? T.text : T.textDim,
+                    transition: 'color .2s'
+                  }}>{a.area}</div>
+                  <div style={{
+                    fontSize: 11, fontFamily: '"Inter", sans-serif',
+                    color: T.textFaint, letterSpacing: '0.14em',
+                    textTransform: 'uppercase', marginTop: 4
+                  }}>{a.tag}</div>
+                </div>
+                <div style={{
+                  fontSize: 18, color: active === i ? T.sky : T.textFaint,
+                  transform: active === i ? 'translateX(6px)' : 'none',
+                  transition: 'all .2s'
+                }}>→</div>
+              </div>
+            ))}
+          </div>
+
+          {/* glass detail card */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(20px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+            padding: 40, position: 'sticky', top: 100,
+            alignSelf: 'start', minHeight: 480,
+            boxShadow: '0 30px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, marginBottom: 28 }}>
+              <span style={{
+                fontFamily: '"Inter", sans-serif',
+                fontSize: 56, fontWeight: 800,
+                background: `linear-gradient(135deg, ${T.sky}, ${T.accent})`,
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                lineHeight: 1, letterSpacing: '-0.02em'
+              }}>{areas[active].num}</span>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 700 }}>{areas[active].area}</div>
+                <div style={{
+                  fontSize: 11, fontFamily: '"Inter", sans-serif',
+                  color: T.textFaint, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', marginTop: 4
+                }}>{areas[active].tag}</div>
+              </div>
+            </div>
+
+            <div style={{
+              fontSize: 11, fontFamily: '"Inter", sans-serif',
+              color: T.textFaint, letterSpacing: '0.16em',
+              textTransform: 'uppercase', marginBottom: 18, fontWeight: 600
+            }}>
+              自動化対象タスク
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {areas[active].tasks.map((task, i) => (
+                <li key={task} style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  fontSize: 15, color: T.textMuted, paddingBottom: 12,
+                  borderBottom: i < areas[active].tasks.length - 1 ? `1px dashed ${T.border}` : 'none'
+                }}>
+                  <span style={{
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: 11, color: T.textFaint, width: 20
+                  }}>{String(i+1).padStart(2, '0')}</span>
+                  <span style={{ flex: 1 }}>{task}</span>
+                  <span style={{ color: T.sky, fontSize: 14 }}>✓</span>
+                </li>
+              ))}
+            </ul>
+
+            <div style={{
+              marginTop: 28, padding: '18px 22px',
+              background: `linear-gradient(135deg, ${T.accent}25, ${T.sky}15)`,
+              border: `1px solid ${T.sky}30`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            }}>
+              <span style={{ fontSize: 13, color: T.textDim }}>想定削減工数</span>
+              <span style={{
+                fontSize: 22, fontWeight: 700, color: T.sky,
+                fontFamily: '"Inter", "Noto Sans JP", sans-serif',
+                letterSpacing: '-0.01em'
+              }}>{areas[active].saving}</span>
+            </div>
+          </div>
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+// ─── 4. SUBSIDY ──────────────────────────────────────────────────────────────
+
+const Subsidy = () => (
+  <section id="subsidy" data-screen-label="04 Subsidy" style={{
+    background: T.bgDeep, color: T.text,
+    padding: '140px 0', position: 'relative'
+  }}>
+    <Container>
+      <SectionHead
+        eyebrow="Subsidy"
+        title={<>助成金活用で、実質 <span style={{ color: T.sky }}>1/4</span> の負担。</>}
+        lead={<>人材開発支援助成金（事業展開等リスキリング支援コース）を活用。<br/>社労士が申請から受給まで完全代行するため、お客様の作業はゼロです。</>}
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 64, alignItems: 'center', maxWidth: 1100, margin: '0 auto' }}>
+        <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {[
+              { t: '社労士による申請完全代行', d: 'ヒアリング1回でOK。書類はすべてこちらで作成。' },
+              { t: '不採択時は費用ゼロ', d: '成果報酬制。リスクなくチャレンジ可能。' },
+              { t: '採択率 90% 以上の実績', d: '中小企業案件を中心に豊富な実績。' },
+            ].map((b, i) => (
+              <div key={b.t} style={{
+                display: 'flex', gap: 16, alignItems: 'flex-start',
+                padding: '20px 24px',
+                background: T.bgSlate, border: `1px solid ${T.border}`,
+              }}>
+                <span style={{
+                  width: 32, height: 32, flexShrink: 0,
+                  background: `linear-gradient(135deg, ${T.accent}, ${T.sky})`,
+                  color: T.text,
+                  display: 'grid', placeItems: 'center',
+                  fontSize: 14, fontWeight: 800,
+                  fontFamily: '"Inter", sans-serif',
+                  boxShadow: `0 6px 16px ${T.accent}40`
+                }}>0{i+1}</span>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: T.text, marginBottom: 4 }}>{b.t}</div>
+                  <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.6 }}>{b.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* glass cost card */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(56,189,248,0.06), rgba(37,99,235,0.04))',
+          border: '1px solid rgba(56,189,248,0.18)',
+          backdropFilter: 'blur(20px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+          padding: 44,
+          boxShadow: '0 30px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)'
+        }}>
+          <div style={{
+            fontSize: 12, letterSpacing: '0.16em', color: T.sky,
+            fontWeight: 600, marginBottom: 28
+          }}>
+            COST BREAKDOWN
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+                <span style={{ fontSize: 14, color: T.textDim }}>定価</span>
+                <span style={{
+                  fontFamily: '"Inter", sans-serif', fontSize: 28, fontWeight: 700,
+                  color: T.textFaint, textDecoration: 'line-through', letterSpacing: '-0.01em'
+                }}>¥2,400,000</span>
+              </div>
+              <div style={{ height: 8, background: 'rgba(241,245,249,0.08)', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '100%', background: 'rgba(241,245,249,0.2)' }}></div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: T.sky, fontSize: 13, fontWeight: 600 }}>
+              <span style={{ flex: 1, height: 1, background: T.sky, opacity: 0.4 }}></span>
+              助成金 75% 補助
+              <span style={{ flex: 1, height: 1, background: T.sky, opacity: 0.4 }}></span>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+                <span style={{ fontSize: 14, color: T.text, fontWeight: 600 }}>実質負担</span>
+                <span style={{
+                  fontFamily: '"Inter", sans-serif',
+                  fontSize: 48, fontWeight: 800,
+                  background: `linear-gradient(135deg, ${T.sky}, ${T.accent})`,
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  letterSpacing: '-0.02em', lineHeight: 1
+                }}>¥600,000</span>
+              </div>
+              <div style={{ height: 8, background: 'rgba(56,189,248,0.12)', overflow: 'hidden' }}>
+                <div style={{ width: '25%', height: '100%', background: `linear-gradient(90deg, ${T.accent}, ${T.sky})` }}></div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            marginTop: 32, padding: '16px 20px',
+            background: 'rgba(15,23,42,0.6)',
+            border: `1px solid ${T.border}`,
+            color: T.textDim, fontSize: 13, lineHeight: 1.7
+          }}>
+            <strong style={{ color: T.sky }}>※</strong> 助成金額は事業規模・条件により変動します。診断時に正確な見込み額をご提示します。
+          </div>
+        </div>
+      </div>
+    </Container>
+  </section>
+);
+
+// ─── 5. PHASES ───────────────────────────────────────────────────────────────
+
+const Phases = () => {
+  const [active, setActive] = useState(0);
+  const phases = [
+    {
+      num: '01', label: 'PHASE 01',
+      title: '研修', en: 'Training', duration: '2週間',
+      body: '貴社の業務に合わせて、AI活用リテラシーをチームに装着。「使いこなせる組織」をつくる初期投資です。',
+      points: ['業務棚卸しワークショップ', 'AI活用基礎研修', '自動化候補の優先順位付け']
+    },
+    {
+      num: '02', label: 'PHASE 02',
+      title: '実装', en: 'Implementation', duration: '4〜6週間',
+      body: '実業務にあわせたAIワークフローを構築。既存ツール（会計・勤怠・CRM）と接続し、即日効果が見える状態に。',
+      points: ['業務フロー設計', 'AIワークフロー構築', '既存システム連携・テスト']
+    },
+    {
+      num: '03', label: 'PHASE 03',
+      title: '運用', en: 'Operation', duration: '継続',
+      body: '月次レビューで改善を回し、自動化の対象を拡張。「使われ続ける仕組み」として定着させます。',
+      points: ['月次運用レビュー', '改善・チューニング', '自動化対象の段階的拡張']
+    },
+  ];
+
+  return (
+    <section data-screen-label="05 Phases" style={{
+      background: T.bgSlate, color: T.text,
+      padding: '140px 0', position: 'relative'
+    }}>
+      <Container>
+        <SectionHead
+          eyebrow="Process"
+          title={<>3フェーズで、<span style={{ color: T.sky }}>業務を再設計</span>する。</>}
+          lead="ツール導入では終わらない。半年間の伴走で、変革を定着させます。"
+        />
+
+        <div style={{ position: 'relative' }}>
+          {/* progress line */}
+          <div style={{
+            position: 'absolute', top: 28, left: '14%', right: '14%',
+            height: 2, background: T.border
+          }}>
+            <div style={{
+              height: '100%',
+              background: `linear-gradient(90deg, ${T.accent}, ${T.sky})`,
+              width: `${(active / 2) * 100}%`,
+              transition: 'width .4s ease',
+              boxShadow: `0 0 12px ${T.sky}80`
+            }}></div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, position: 'relative' }}>
+            {phases.map((p, i) => (
+              <div key={i}
+                onMouseEnter={() => setActive(i)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div style={{
+                  width: 56, height: 56,
+                  background: i <= active
+                    ? `linear-gradient(135deg, ${T.accent}, ${T.sky})`
+                    : T.bgDeep,
+                  border: `2px solid ${i <= active ? T.sky : T.borderStrong}`,
+                  display: 'grid', placeItems: 'center',
+                  fontFamily: '"Inter", sans-serif',
+                  fontWeight: 700, fontSize: 18,
+                  color: i <= active ? T.text : T.textFaint,
+                  margin: '0 auto', position: 'relative', zIndex: 1,
+                  transition: 'all .3s',
+                  boxShadow: i <= active ? `0 8px 24px ${T.accent}50` : 'none'
+                }}>{p.num}</div>
+
+                <div style={{ marginTop: 32, textAlign: 'center' }}>
+                  <div style={{
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: 11, color: T.sky, letterSpacing: '0.16em',
+                    fontWeight: 600
+                  }}>{p.label}</div>
+                  <div style={{
+                    fontSize: 32, fontWeight: 800, color: T.text,
+                    marginTop: 6, letterSpacing: '-0.01em'
+                  }}>{p.title}</div>
+                  <div style={{
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: 12, color: T.textFaint,
+                    letterSpacing: '0.08em', marginTop: 4
+                  }}>{p.en} · {p.duration}</div>
+                </div>
+
+                <div style={{
+                  marginTop: 28, padding: 28,
+                  background: i === active
+                    ? `linear-gradient(135deg, rgba(37,99,235,0.12), rgba(56,189,248,0.06))`
+                    : T.bgDeep,
+                  border: `1px solid ${i === active ? T.sky + '30' : T.border}`,
+                  transition: 'all .3s ease',
+                  minHeight: 240,
+                  boxShadow: i === active ? `0 12px 32px rgba(37,99,235,0.15)` : 'none'
+                }}>
+                  <p style={{
+                    fontSize: 14, lineHeight: 1.75, margin: 0, color: T.textMuted
+                  }}>
+                    {p.body}
+                  </p>
+                  <ul style={{
+                    listStyle: 'none', padding: 0, margin: '20px 0 0',
+                    display: 'flex', flexDirection: 'column', gap: 10
+                  }}>
+                    {p.points.map(pt => (
+                      <li key={pt} style={{
+                        fontSize: 13, display: 'flex', gap: 10,
+                        alignItems: 'flex-start', color: T.textDim
+                      }}>
+                        <span style={{
+                          width: 5, height: 5,
+                          background: T.sky,
+                          marginTop: 8, flexShrink: 0,
+                          boxShadow: `0 0 6px ${T.sky}`
+                        }}></span>
+                        {pt}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+// ─── 6. CASE STUDY ───────────────────────────────────────────────────────────
+
+const CaseStudy = () => (
+  <section id="case" data-screen-label="06 Case" style={{
+    background: T.bgDeep, color: T.text,
+    padding: '140px 0', position: 'relative', overflow: 'hidden'
+  }}>
+    <div style={{
+      position: 'absolute', left: -100, bottom: -100,
+      width: 500, height: 500,
+      background: `radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%)`,
+      pointerEvents: 'none'
+    }}></div>
+
+    <Container style={{ position: 'relative' }}>
+      <SectionHead
+        eyebrow="Case Study"
+        title={<>製造業A社（45名） 月 <span style={{ color: T.sky }}>50万円</span> 削減。</>}
+        lead="「人を増やさずに、業務量を倍にできた。空いた人手は付加価値の高い仕事へ。」"
+      />
+
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{
+          display: 'inline-flex',
+          padding: '8px 18px',
+          border: `1px solid ${T.sky}40`,
+          background: `${T.sky}10`,
+          color: T.sky,
+          fontSize: 12, fontWeight: 600, letterSpacing: '0.12em',
+          marginBottom: 32
+        }}>
+          製造業 / 従業員45名 / 金属加工
+        </div>
+
+        {/* metrics */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, marginBottom: 40 }}>
+          {[
+            { v: '50', u: '万円/月', l: '固定費削減', sub: '年換算 600万円' },
+            { v: '180', u: 'h/月', l: '工数削減', sub: '主要業務トータル' },
+            { v: '4', u: 'ヶ月', l: '黒字化期間', sub: '初期投資の回収' },
+          ].map((m, i) => (
+            <div key={i} style={{
+              padding: i === 0 ? '0 32px 0 0' : '0 32px',
+              borderRight: i < 2 ? `1px solid ${T.border}` : 'none'
+            }}>
+              <div style={{
+                fontFamily: '"Inter", sans-serif',
+                fontSize: 64, fontWeight: 800,
+                background: `linear-gradient(135deg, ${T.sky}, ${T.accent})`,
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                letterSpacing: '-0.03em', lineHeight: 1
+              }}>
+                {m.v}<span style={{ fontSize: 20, color: T.textDim, fontWeight: 500, marginLeft: 4, WebkitTextFillColor: T.textDim }}>{m.u}</span>
+              </div>
+              <div style={{ fontSize: 14, color: T.text, marginTop: 14, fontWeight: 600 }}>{m.l}</div>
+              <div style={{ fontSize: 12, color: T.textFaint, marginTop: 4 }}>{m.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* before/after card */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
+          border: `1px solid ${T.border}`,
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          padding: 40,
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)'
+        }}>
+          <div style={{
+            fontSize: 11, fontWeight: 600, letterSpacing: '0.16em',
+            color: T.sky, marginBottom: 24
+          }}>
+            BEFORE / AFTER
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 32, alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 12, color: T.textFaint, marginBottom: 12, letterSpacing: '0.1em' }}>導入前</div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {['経理1名+総務1名', '月140h 残業', 'ChatGPT 個人利用'].map(t => (
+                  <li key={t} style={{ fontSize: 15, color: T.textDim, display: 'flex', gap: 10 }}>
+                    <span style={{ color: T.textFaint }}>—</span>{t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div style={{ fontSize: 28, color: T.sky }}>→</div>
+            <div>
+              <div style={{ fontSize: 12, color: T.sky, marginBottom: 12, fontWeight: 600, letterSpacing: '0.1em' }}>導入後</div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {['経理1名 兼任のみ', '残業ゼロ', 'AI参謀ワークフロー化'].map(t => (
+                  <li key={t} style={{ fontSize: 15, color: T.text, display: 'flex', gap: 10 }}>
+                    <span style={{ color: T.sky }}>✓</span>{t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </section>
+);
+
+// ─── 7. CTA ──────────────────────────────────────────────────────────────────
+
+const CTA = ({ cta }) => (
+  <section id="cta" data-screen-label="07 CTA" style={{
+    background: T.bgSlate,
+    padding: '140px 0', position: 'relative'
+  }}>
+    <Container>
+      <div style={{
+        background: `linear-gradient(135deg, ${T.primary} 0%, ${T.bgDeep} 100%)`,
+        color: T.text, padding: '88px 80px',
+        position: 'relative', overflow: 'hidden',
+        border: `1px solid ${T.sky}30`,
+        boxShadow: `0 30px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)`
+      }}>
+        <div style={{
+          position: 'absolute', right: -150, top: -150,
+          width: 500, height: 500,
+          background: `radial-gradient(circle, ${T.accent}30, transparent 60%)`,
+          filter: 'blur(40px)', pointerEvents: 'none'
+        }}></div>
+        <div style={{
+          position: 'absolute', right: -40, top: -60,
+          fontFamily: '"Inter", sans-serif',
+          fontSize: 360, fontWeight: 900,
+          color: 'rgba(56,189,248,0.04)',
+          lineHeight: 1, pointerEvents: 'none', userSelect: 'none'
+        }}>60</div>
+
+        <div style={{ position: 'relative', maxWidth: 760, textAlign: 'center', margin: '0 auto' }}>
+          <Eyebrow color={T.sky} center>FREE 60-MIN DIAGNOSIS</Eyebrow>
+          <h2 style={{
+            fontSize: 'clamp(40px, 5vw, 68px)',
+            lineHeight: 1.18, fontWeight: 800,
+            color: T.text, margin: '24px 0 24px',
+            letterSpacing: '-0.01em'
+          }}>
+            まず、<span style={{
+              background: `linear-gradient(135deg, ${T.sky}, ${T.accent})`,
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+            }}>診断</span>だけでも。
+          </h2>
+          <p style={{
+            fontSize: 18, lineHeight: 1.8, color: T.textDim,
+            margin: '0 auto 44px', maxWidth: 600
+          }}>
+            貴社のバックオフィス業務を棚卸しし、削減見込み額・助成金活用シナリオを60分でご提示します。
+            診断のみのご利用、もちろんOKです。
+          </p>
+
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16,
+            marginBottom: 48, paddingTop: 36,
+            borderTop: `1px solid ${T.border}`,
+            textAlign: 'left'
+          }}>
+            {[
+              { t: '業務棚卸しシート', s: 'ヒアリング後にお渡し' },
+              { t: '削減見込み試算', s: '貴社固有の数値で算出' },
+              { t: '助成金活用診断', s: '対象可否を即日判定' },
+            ].map(b => (
+              <div key={b.t} style={{
+                padding: 20,
+                background: 'rgba(255,255,255,0.03)',
+                border: `1px solid ${T.border}`
+              }}>
+                <div style={{ fontSize: 11, color: T.sky, letterSpacing: '0.12em', fontWeight: 600, marginBottom: 8 }}>
+                  特典
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 4 }}>{b.t}</div>
+                <div style={{ fontSize: 12, color: T.textFaint }}>{b.s}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="cta-btn" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 14,
+              background: T.accent, color: T.text,
+              padding: '22px 38px',
+              fontWeight: 700, fontSize: 17, border: `1px solid ${T.sky}50`,
+              boxShadow: `0 16px 40px ${T.accent}55`,
+              cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'all .2s ease'
+            }}>
+              {cta}
+            </button>
+            <div style={{ fontSize: 13, color: T.textDim, display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3CD27F', boxShadow: '0 0 8px #3CD27F' }}></span>
+                オンラインで完結
+              </span>
+              <span>·</span>
+              <span>無理な営業ナシ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </section>
+);
+
+// ─── 8. FOOTER ───────────────────────────────────────────────────────────────
+
+const Footer = () => (
+  <footer style={{
+    background: T.bgDeep, color: T.textDim,
+    padding: '64px 0 44px',
+    borderTop: `1px solid ${T.border}`
+  }}>
+    <Container>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 32, height: 32,
+            background: `linear-gradient(135deg, ${T.accent}, ${T.sky})`,
+            display: 'grid', placeItems: 'center',
+            fontWeight: 800, color: T.text, fontSize: 15,
+            fontFamily: '"Inter", sans-serif'
+          }}>参</div>
+          <span style={{ color: T.text, fontWeight: 700, fontSize: 16 }}>AI参謀</span>
+          <span style={{ fontSize: 12, marginLeft: 12, color: T.textFaint }}>© 2025 AI参謀</span>
+        </div>
+        <div style={{ display: 'flex', gap: 28, alignItems: 'center', fontSize: 13 }}>
+          <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>会社情報</a>
+          <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>プライバシー</a>
+          <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>特商法表記</a>
+          <a href="#" style={{
+            color: T.sky, textDecoration: 'none', fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: 6
+          }}>
+            @ai_honyaku
+          </a>
+        </div>
+      </div>
+    </Container>
+  </footer>
+);
+
+// ─── App ─────────────────────────────────────────────────────────────────────
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "headline": "その定型業務、もう人がやらなくていい。",
+  "subhead": "バックオフィスをAIで自動化。固定費を半分に。",
+  "ctaText": "60分無料Zoom診断を申し込む →"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  return (
+    <React.Fragment>
+      <Hero
+        headline={t.headline}
+        subhead={t.subhead}
+        cta={t.ctaText}
+      />
+      <Problem />
+      <Solution />
+      <Subsidy />
+      <Phases />
+      <CaseStudy />
+      <CTA cta={t.ctaText} />
+      <Footer />
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="ヒーロー" />
+        <TweakText label="キャッチコピー" value={t.headline} onChange={(v) => setTweak('headline', v)} />
+        <TweakText label="サブコピー" value={t.subhead} onChange={(v) => setTweak('subhead', v)} />
+        <TweakText label="CTAテキスト" value={t.ctaText} onChange={(v) => setTweak('ctaText', v)} />
+      </TweaksPanel>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
